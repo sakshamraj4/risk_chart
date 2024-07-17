@@ -72,7 +72,11 @@ fig.update_layout(
     yaxis_title="Severity",
     yaxis=dict(tickmode='array', tickvals=[1, 2, 3], ticktext=['Low', 'Medium', 'High']),
     xaxis=dict(tickformat='%d/%m/%Y'),
-    legend_title="Severity"
+    legend_title="Severity",
+    autosize=True,
+    height=None,  # Allow height to be responsive
+    margin=dict(l=20, r=20, t=40, b=20),
+    title={'x': 0.5, 'xanchor': 'center'}
 )
 
 # Define the color mapping for scatter plot points
@@ -88,5 +92,23 @@ for severity, color in color_mapping.items():
         hovertemplate='<b>Date:</b> %{x}<br><b>Severity:</b> %{y}<br><b>Note:</b> %{customdata}<extra></extra>'
     )
 
+# Custom CSS to hide Streamlit elements and make the chart full screen
+st.markdown(
+    """
+    <style>
+    .css-18e3th9 {
+        padding-top: 0rem;
+        padding-bottom: 0rem;
+        padding-left: 0rem;
+        padding-right: 0rem;
+    }
+    .css-1d391kg, .css-hxt7ib {
+        display: none;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 # Display the plot in Streamlit
-st.plotly_chart(fig)
+st.plotly_chart(fig, use_container_width=True)
