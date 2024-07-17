@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
+import plotly.express as px
 from urllib.parse import unquote, urlencode
 
 # Function to fetch the CSV data from GitHub
@@ -56,34 +56,37 @@ filtered_data = data[data['farmName'] == selected_farm]
 # Main dashboard
 st.title(f"Risk Level Monitoring for {selected_farm}")
 
-# Plotting the styled line chart
-fig, ax = plt.subplots()
+# Plotting the interactive line chart with Plotly
+fig = px.line(
+    filtered_data,
+    x='Date',
+    y='Severity',
+    title=f"Severity over Time for {selected_farm}",
+    markers=True,
+    custom_data=['Note']  # Including the Note column for tooltips
+)
 
-# Plot the main line connecting all points in chronological order
-ax.plot(filtered_data['Date'].values, filtered_data['Severity'].values, marker='o', linestyle='-', color='blue')
+# Update the layout to match the desired appearance
+fig.update_layout(
+    xaxis_title="Date",
+    yaxis_title="Severity",
+    yaxis=dict(tickmode='array', tickvals=[1, 2, 3], ticktext=['Low', 'Medium', 'High']),
+    xaxis=dict(tickformat='%d/%m/%Y'),
+    legend_title="Severity"
+)
 
-# Define color mapping for severity
+# Define the color mapping for scatter plot points
 color_mapping = {1: 'green', 2: 'yellow', 3: 'red'}
-
-# Plot the data points with color mapping
 for severity, color in color_mapping.items():
-    severity_data = filtered_data[filtered_data['Severity'] == severity]
-    ax.scatter(severity_data['Date'].values, severity_data['Severity'].values, color=color, label=f'{severity}', s=100, edgecolor='black')
-
-# Customizing the plot
-ax.set_xlabel("Date")
-ax.set_ylabel("Severity")
-ax.set_title(f"Severity over Time for {selected_farm}")
-ax.set_xticks(filtered_data['Date'].values)
-ax.set_xticklabels(filtered_data['Date'].dt.strftime('%d/%m/%Y'), rotation=45)
-ax.set_yticks([1, 2, 3])
-ax.set_yticklabels(['Low', 'Medium', 'High'])
-
-# Adding a legend for the severity levels
-severity_labels = {1: 'Low', 2: 'Medium', 3: 'High'}
-handles, labels = ax.get_legend_handles_labels()
-new_labels = [severity_labels[int(label)] for label in labels]
-ax.legend(handles, new_labels)
+    fig.add_scatter(
+        x=filtered_data[filtered_data['Severity'] == severity]['Date'],
+        y=filtered_data[filtered_data['Severity'] == severity]['Severity'],
+        mode='markers',
+        marker=dict(color=color, size=10, line=dict(color='black', width=1)),
+        name={1: 'Low', 2: 'Medium', 3: 'High'}[severity],
+        customdata=filtered_data[filtered_data['Severity'] == severity]['Note'],
+        hovertemplate='<b>Date:</b> %{x}<br><b>Severity:</b> %{y}<br><b>Note:</b> %{customdata}<extra></extra>'
+    )
 
 # Display the plot in Streamlit
-st.pyplot(fig)
+st.plotly_chart(fig)
